@@ -273,7 +273,7 @@ The speed input is read using ADC and processed before transmission.
 The speed value is mapped to:
 
 ```text
-0 ───────────────────────── 100 km/h
+0 ─── 100 km/h
 ```
 
 ---
@@ -630,9 +630,9 @@ Different vehicle conditions can be tested using different Speed, Gear, RPM, and
 | 🧪 Condition | 🚦 Speed | ⚙️ Gear | 🔄 RPM | 💡 Indicator |
 |:-------------|:--------:|:-------:|:------:|:------------:|
 | Normal | 75 km/h | G3 | 3500 | OFF |
-| Left Turn | 60 km/h | G2 | 2800 | LEFT |
-| Right Turn | 70 km/h | G3 | 3200 | RIGHT |
-| Hazard | 40 km/h | G2 | 2200 | HAZARD |
+| Left Turn | 60 km/h | G2 | 2800 | <- |
+| Right Turn | 70 km/h | G3 | 3200 | -> |
+| Hazard | 40 km/h | G2 | 2200 | <-> |
 
 **🟢 Normal**
 
