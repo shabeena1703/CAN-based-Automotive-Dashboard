@@ -338,9 +338,9 @@ The digital keypad controls the indicator selection.
 
 | 🔘 Switch | 💡 Indicator |
 |:---------:|:-------------|
-| `SW1` | LEFT |
-| `SW2` | HAZARD |
-| `SW3` | RIGHT |
+| `SW1` | <- |
+| `SW2` | <-> |
+| `SW3` | -> |
 | `SW4` | OFF |
 
 **💡 Indicator Values**
@@ -649,7 +649,7 @@ Indicator = OFF
 Speed = 60 km/h
 Gear = G2
 RPM = 2800
-Indicator = LEFT
+Indicator = <- (LEFT)
 ```
 
 **▶️ Right Turn**
@@ -658,7 +658,7 @@ Indicator = LEFT
 Speed = 70 km/h
 Gear = G3
 RPM = 3200
-Indicator = RIGHT
+Indicator = -> (RIGHT)
 ```
 
 **🚨 Hazard**
@@ -667,7 +667,7 @@ Indicator = RIGHT
 Speed = 40 km/h
 Gear = G2
 RPM = 2200
-Indicator = HAZARD
+Indicator = <-> (HAZARD)
 ```
 
 ---
