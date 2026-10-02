@@ -1,391 +1,629 @@
 # 🚗 CAN-Based Automotive Dashboard
 
-A **CAN-based automotive dashboard system** developed using **PIC18F4580 microcontrollers** and **Embedded C**.
-
-The system consists of **three ECUs** communicating through the **CAN (Controller Area Network)** protocol. Vehicle parameters such as **Speed, Gear, RPM, and Indicator status** are transmitted over CAN and displayed on a Character LCD.
+> A multi-ECU automotive dashboard project using CAN communication to monitor and display **Speed, Gear, RPM, and Indicator status**.
 
 ---
 
-## 📌 Project Overview
+## 📝 About the Project
 
-The project follows a **3-ECU architecture**, where each ECU performs a specific function.
+This project implements a **CAN-Based Automotive Dashboard** using **three PIC18F4580 ECUs**.
 
-- 🚘 **ECU1** – Handles Speed and Gear
-- ⚙️ **ECU2** – Handles RPM and Indicator
-- 📟 **ECU3** – Receives CAN data and displays the information on the dashboard
+Each ECU performs a specific function and communicates with the other ECUs through the **CAN protocol**.
 
-All three ECUs communicate through the **CAN bus**.
-
----
-
-## 🏗️ System Architecture
+The dashboard ECU receives the vehicle information through CAN and displays the data on a **Character LCD**.
 
 ```text
                   ┌─────────────────────┐
-                  │       ECU1          │
-                  │    Speed + Gear     │
+                  │       ECU 1         │
+                  │   🚗 Speed + Gear   │
                   └──────────┬──────────┘
                              │
-                             │ CAN BUS
+                             │ CAN
                              ▼
                   ┌─────────────────────┐
-                  │       ECU3          │
-                  │   Dashboard ECU     │
+                  │       ECU 3         │
+                  │    📺 Dashboard     │
                   │                     │
-                  │   Character LCD     │
-                  │ Speed / Gear / RPM  │
-                  │     Indicator       │
-                  └──────────▲──────────┘
-                             │
-                             │ CAN BUS
+                  │ Speed               │
+                  │ Gear                │
+                  │ RPM                 │
+                  │ Indicator           │
+                  └──────────┬──────────┘
+                             ▲
+                             │ CAN
                              │
                   ┌──────────┴──────────┐
-                  │       ECU2          │
-                  │   RPM + Indicator   │
+                  │       ECU 2         │
+                  │   🔄 RPM + Indicator│
                   └─────────────────────┘
+```
 
 ---
 
-##🔧 ECU Responsibilities
+## ✨ Features
 
-ECU	Responsibility
-🚘 ECU1	Reads Speed and Gear information and transmits it through CAN
-⚙️ ECU2	Reads RPM and Indicator information and transmits it through CAN
-📟 ECU3	Receives CAN messages and displays Speed, Gear, RPM, and Indicator status
-🆔 CAN Message IDs
-
-Parameter	CAN ID
-🚗 Speed	0x10
-⚙️ Gear	0x20
-🔄 RPM	0x30
-💡 Indicator	0x40
-
-The project uses standard CAN identifiers for communication between the ECUs.
+- 🚗 Speed monitoring
+- ⚙️ Gear monitoring
+- 🔄 RPM monitoring
+- ↔️ Left and right indicator control
+- 🚨 Hazard indicator support
+- 📡 CAN communication between multiple ECUs
+- 📺 Real-time dashboard display
+- 💡 Indicator LED control
+- ⏱️ Timer0-based indicator blinking
+- 🔧 Register-level Embedded C programming
 
 ---
 
-##🔄 CAN Communication Flow
-       Speed ───────┐
-                    │
-       Gear ────────┤
-                    │
-                    ▼
-                 CAN BUS
-                    │
-       RPM ─────────┤
-                    │
-       Indicator ───┘
-                    │
-                    ▼
-              Dashboard ECU
-                  ECU3
-                    │
-                    ▼
-             Character LCD
+## 🧠 How It Works
+
+The project is divided into **three ECUs**, where each ECU performs a specific task.
+
+### 🚗 ECU 1 – Speed and Gear
+
+ECU 1 is responsible for:
+
+- Reading speed input through ADC
+- Reading gear selection
+- Sending speed data through CAN
+- Sending gear data through CAN
+
+```text
+Speed Input
+     ↓
+    ADC
+     ↓
+   ECU 1
+     │
+     ├──────── CAN ────────→ Speed
+     │
+Gear Input
+     ↓
+   ECU 1
+     │
+     └──────── CAN ────────→ Gear
+```
+
+### 🔄 ECU 2 – RPM and Indicator
+
+ECU 2 is responsible for:
+
+- Reading RPM through ADC
+- Reading indicator selection
+- Left indicator
+- Right indicator
+- Hazard indicator
+- Indicator OFF
+- Sending RPM and indicator information through CAN
+
+```text
+RPM Input
+    ↓
+   ADC
+    ↓
+  ECU 2
+    │
+    └──────── CAN ─────────→ RPM
+
+
+Indicator Input
+       ↓
+     ECU 2
+       │
+       └────── CAN ────────→ Indicator
+```
+
+### 📺 ECU 3 – Dashboard
+
+ECU 3 acts as the **dashboard ECU**.
+
+It:
+
+- 📡 Receives CAN messages
+- 🔎 Identifies the message using CAN ID
+- ⚙️ Processes the received data
+- 📺 Displays Speed, Gear, RPM, and Indicator status
+- 💡 Controls indicator LEDs
+- ⏱️ Uses Timer0 for indicator blinking
+
+```text
+             CAN Messages
+                  ↓
+              ECU 3
+                  ↓
+          Identify CAN ID
+                  ↓
+        ┌─────────┼─────────┐
+        ↓         ↓         ↓
+      Speed      Gear       RPM
+        │         │         │
+        └─────────┼─────────┘
+                  ↓
+             Indicator
+                  ↓
+             LCD Display
+                  +
+           Indicator LEDs
+```
 
 ---
 
-##⚙️ How the System Works
-**🚘 ECU1 – Speed and Gear**
-Speed information is obtained using ADC.
-The ADC value is converted into the required speed range.
-Gear information is obtained.
-Speed and Gear data are packed into CAN messages.
-The messages are transmitted through the CAN bus.
+## 📡 CAN Communication
 
-**⚙️ ECU2 – RPM and Indicator**
-RPM information is obtained using ADC.
-The ADC value is converted into the required RPM range.
-Indicator status is handled.
-RPM and Indicator data are transmitted through CAN.
+The three ECUs communicate with each other using the **Controller Area Network (CAN)** protocol.
 
-**📟 ECU3 – Dashboard**
-ECU3 continuously checks for incoming CAN messages.
-The CAN ID is identified.
-The corresponding data is extracted.
-Speed, Gear, RPM, and Indicator information are processed.
-The processed information is displayed on the Character LCD.
-GPIO and Timer0 are used to control indicator blinking.
+Each type of vehicle information is assigned a unique CAN message ID.
+
+| 🚘 Parameter | 🆔 CAN Message ID |
+|:------------:|:-----------------:|
+| Speed        | `0x10`            |
+| Gear         | `0x20`            |
+| RPM          | `0x30`            |
+| Indicator    | `0x40`            |
+
+ECU 3 receives the CAN messages and processes them according to the **message ID**.
 
 ---
 
-##📊 Data Processing
-**🚗 Speed Calculation**
+## 🚦 Speed Processing
 
-The ADC value is converted into a speed value from 0 to 100.
+The speed input is read using the ADC.
 
-Speed = ADC Value × 100 / 1023
+The ADC value is in the range:
 
-**🔄 RPM Calculation**
+```text
+0 ─────────────────────── 1023
+```
 
-The ADC value is converted into an RPM value from 0 to 6000.
+The ADC value is converted into a speed value in the range:
 
-RPM = ADC Value × 6000 / 1023
+```text
+0 ─────────────────────── 100 km/h
+```
 
-**⚙️ Gear Mapping**
+The converted speed is transmitted through CAN and displayed on the dashboard.
 
-The gear information is represented using the following values:
-
-Value	Gear
-0	GN
-1	G1
-2	G2
-3	G3
-4	G4
-5	G5
-6	GR
-7	_C
-**💡 Indicator System**
-
-The indicator status is received through CAN.
-
-Value	Indicator
-0	← Left
-1	→ Right
-2	↔ Hazard
-3	OFF
-
-The indicator LEDs are controlled using GPIO, while Timer0 is used to generate the blinking operation.
-
-**📟 Dashboard Display**
-
-ECU3 displays the received vehicle information on a Character LCD.
-
-The dashboard displays:
-
-🚗 Vehicle Speed
-⚙️ Current Gear
-🔄 Engine RPM
-💡 Indicator Status
-Example Display
-┌────────────────────┐
-│ Speed : 75 km/h    │
-│ Gear  : G3         │
-│ RPM   : 3500       │
-│ Ind   : <-         │
-└────────────────────┘
+```text
+ADC Input
+    ↓
+ADC Value
+    ↓
+CAN Transmission
+    ↓
+ECU 3
+    ↓
+Speed Conversion
+    ↓
+LCD Display
+```
 
 ---
 
-##📡 CAN Communication
+## ⚙️ Gear Processing
 
-The project uses the ECAN module of the PIC18F4580 for communication.
+The gear information is transmitted as an index.
 
-CAN Configuration
-Parameter	Configuration
-Microcontroller	PIC18F4580
-Communication Protocol	CAN
-CAN Mode	Normal Mode
-Identifier Type	Standard CAN ID
-CAN TX	RB2
-CAN RX	RB3
-Clock Frequency	8 MHz
-⏱️ Timer0 – Indicator Blinking
+| 🔢 Index | ⚙️ Gear |
+|:--------:|:-------:|
+| `0`      | `GN`    |
+| `1`      | `G1`    |
+| `2`      | `G2`    |
+| `3`      | `G3`    |
+| `4`      | `G4`    |
+| `5`      | `G5`    |
+| `6`      | `GR`    |
+| `7`      | `_C`    |
+
+ECU 3 receives the gear index and converts it into the corresponding gear name before displaying it on the LCD.
+
+```text
+Gear Input
+    ↓
+Gear Index
+    ↓
+CAN Transmission
+    ↓
+ECU 3
+    ↓
+Gear String
+    ↓
+LCD Display
+```
+
+---
+
+## 🔄 RPM Processing
+
+RPM is obtained using the ADC.
+
+The ADC value is converted into an RPM value in the range:
+
+```text
+0 ─────────────────────── 6000 RPM
+```
+
+The RPM value is then transmitted through CAN.
+
+```text
+RPM Input
+    ↓
+ADC
+    ↓
+RPM Value
+    ↓
+CAN
+    ↓
+ECU 3
+    ↓
+LCD Display
+```
+
+---
+
+## 💡 Indicator Processing
+
+The indicator system supports four states.
+
+| 🔢 Value | 💡 Indicator State | 📺 LCD Display |
+|:--------:|:------------------:|:--------------:|
+| `0`      | Left               | `<-`           |
+| `1`      | Right              | `->`           |
+| `2`      | Hazard             | `<->`          |
+| `3`      | OFF                | Blank          |
+
+The indicator LEDs are controlled using GPIO.
+
+| 💡 Indicator | 🔌 GPIO Pin |
+|:------------:|:-----------:|
+| Left LED     | `RB0`       |
+| Right LED    | `RB7`       |
+
+### ◀️ Left Indicator
+
+```text
+Left LED  → ON
+Right LED → OFF
+```
+
+LCD:
+
+```text
+IND : <-
+```
+
+### ▶️ Right Indicator
+
+```text
+Left LED  → OFF
+Right LED → ON
+```
+
+LCD:
+
+```text
+IND : ->
+```
+
+### 🚨 Hazard Indicator
+
+```text
+Left LED  → ON
+Right LED → ON
+```
+
+LCD:
+
+```text
+IND : <->
+```
+
+### ⛔ Indicator OFF
+
+```text
+Left LED  → OFF
+Right LED → OFF
+```
+
+LCD:
+
+```text
+IND :
+```
+
+---
+
+## ⏱️ Timer0 and Indicator Blinking
 
 Timer0 is used to generate the timing required for indicator blinking.
 
-Timer0 Configuration
-8-bit Timer0
-Internal clock
-No prescaler
-Timer reload inside the interrupt
-Blink state toggled periodically
+The Timer0 interrupt periodically updates the blink state.
 
-This allows the left, right, and hazard indicators to blink according to the selected indicator mode.
+```text
+Timer0 Overflow
+       ↓
+   Interrupt
+       ↓
+     ISR
+       ↓
+ Update Counter
+       ↓
+ Toggle Blink
+       ↓
+Indicator ON / OFF
+```
+
+This allows the indicator LEDs to blink periodically while the selected indicator is active.
 
 ---
 
-##📁 Project Structure
+## 📺 Dashboard Display
+
+ECU 3 displays the received vehicle information on a **Character LCD**.
+
+### 🟢 Normal Condition
+
+```text
+--------------------
+Speed : 75 km/h
+Gear  : G3
+RPM   : 3500
+IND   : OFF
+--------------------
+```
+
+### ◀️ Left Indicator
+
+```text
+--------------------
+Speed : 60 km/h
+Gear  : G2
+RPM   : 2800
+IND   : <-
+--------------------
+```
+
+### ▶️ Right Indicator
+
+```text
+--------------------
+Speed : 70 km/h
+Gear  : G3
+RPM   : 3200
+IND   : ->
+--------------------
+```
+
+### 🚨 Hazard Indicator
+
+```text
+--------------------
+Speed : 40 km/h
+Gear  : G2
+RPM   : 2200
+IND   : <->
+--------------------
+```
+
+---
+
+## 🔌 Hardware Configuration
+
+### 📡 CAN Interface
+
+| 🔌 Signal | 📍 Pin |
+|:---------:|:------:|
+| CAN TX    | `RB2`  |
+| CAN RX    | `RB3`  |
+
+### 📺 Character LCD
+
+| 📺 LCD Signal | 📍 Pin |
+|:-------------:|:------:|
+| LCD Data      | `PORTD` |
+| EN            | `RC2`  |
+| RS            | `RC1`  |
+| RW            | `RC0`  |
+| Busy          | `RD7`  |
+
+### 💡 Indicator LEDs
+
+| 💡 Indicator | 📍 Pin |
+|:------------:|:------:|
+| Left LED     | `RB0`  |
+| Right LED    | `RB7`  |
+
+---
+
+## 📁 Project Structure
+
+```text
 CAN-based-Automotive-Dashboard/
 │
-├── ECU1/
+├── ECU1.X/
 │   ├── main.c
-│   ├── ...
+│   ├── adc.c
+│   ├── can.c
 │   └── ...
 │
-├── ECU2/
+├── ECU2.X/
 │   ├── main.c
-│   ├── ...
+│   ├── adc.c
+│   ├── can.c
+│   ├── keypad.c
 │   └── ...
 │
-├── ECU3/
+├── ECU3.X/
 │   ├── main.c
 │   ├── can.c
-│   ├── can.h
 │   ├── clcd.c
-│   ├── clcd.h
+│   ├── isr.c
 │   ├── timer.c
-│   ├── timer.h
 │   └── ...
 │
 └── README.md
+```
 
 ---
 
-🧩 Technologies Used
-Category	Technology
-💻 Programming Language	Embedded C
-🔧 Microcontroller	PIC18F4580
-📡 Communication	CAN
-📟 Display	Character LCD
-🎛️ Input	ADC
-⏱️ Timer	Timer0
-🔌 Hardware Interface	GPIO
-🛠️ IDE	MPLAB X IDE
-🔁 Complete Program Flow
-                    ┌───────────────┐
-                    │     START     │
-                    └───────┬───────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Initialize ECUs  │
-                  │ CAN / LCD / ADC  │
-                  │ Timer / GPIO     │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Read Vehicle Data │
-                  │ Speed / Gear /     │
-                  │ RPM / Indicator   │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Create CAN        │
-                  │ Messages          │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Transmit Data     │
-                  │ through CAN Bus   │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │       ECU3        │
-                  │ Receive CAN Data  │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Identify CAN ID   │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Process Received  │
-                  │ Data              │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Display Data on   │
-                  │ Character LCD     │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                  ┌───────────────────┐
-                  │ Control Indicator │
-                  │ LEDs using GPIO   │
-                  └─────────┬─────────┘
-                            │
-                            ▼
-                         REPEAT
-▶️ How to Run
-1. Open the Projects
+## 🛠️ Technologies & Concepts
 
-Open the corresponding ECU1, ECU2, and ECU3 projects in MPLAB X IDE.
+| 🛠️ Category | 💻 Technology / Concept |
+|:------------:|:-----------------------:|
+| Programming Language | Embedded C |
+| Microcontroller | PIC18F4580 |
+| Communication | CAN |
+| Display | Character LCD |
+| Analog Input | ADC |
+| Timer | Timer0 |
+| Interrupts | Timer0 Interrupt |
+| I/O | GPIO |
+| IDE | MPLAB X IDE |
+| Compiler | XC8 |
 
-2. Configure the Hardware
+---
 
-Connect the three PIC18F4580 ECUs through the CAN communication interface.
+## 🔄 Program Flow
 
-3. Build the Projects
+```text
+                         🚀 START
+                            ↓
+                  Initialize Peripherals
+                            ↓
+                     Initialize CAN
+                            ↓
+                  Initialize LCD/GPIO
+                            ↓
+                     Configure Timer0
+                            ↓
+                   Enable Interrupts
+                            ↓
+                    Receive CAN Data
+                            ↓
+                  Identify CAN Message
+                            ↓
+             ┌──────────────┼──────────────┐
+             ↓              ↓              ↓
+           Speed           Gear            RPM
+             │              │              │
+             └──────────────┼──────────────┘
+                            ↓
+                        Indicator
+                            ↓
+                    Process CAN Data
+                            ↓
+                   Update LCD Display
+                            ↓
+                   Control Indicator LEDs
+                            ↓
+                           LOOP
+```
 
-For each ECU:
+---
 
-MPLAB X IDE
-     ↓
-Clean and Build Project
-     ↓
-Generate HEX file
-4. Program the Microcontrollers
+## 🚀 How to Run
 
-Program the generated HEX file into the respective PIC18F4580 microcontroller using a compatible programmer/debugger.
+1. Open **MPLAB X IDE**.
+2. Open the required ECU project.
+3. Select the **PIC18F4580** microcontroller.
+4. Build the project using the **XC8 compiler**.
+5. Program the respective ECU.
+6. Connect the ECUs through the CAN network.
+7. Power the system.
+8. Provide the required speed, gear, RPM, and indicator inputs.
+9. Observe the vehicle information on the dashboard LCD.
 
-5. Connect the CAN Network
+---
 
-Connect the CAN TX and CAN RX lines between the ECUs through the CAN interface.
+## 📊 Sample Output
 
-6. Power ON the System
+### 🟢 Output 1 – Normal Condition
 
-After powering the ECUs:
+```text
+--------------------
+Speed : 75 km/h
+Gear  : G3
+RPM   : 3500
+IND   : OFF
+--------------------
+```
 
-ECU1 ──┐
-       │
-       ├── CAN BUS ──> ECU3
-       │
-ECU2 ──┘
+### ◀️ Output 2 – Left Indicator
 
-ECU3 receives the transmitted data and displays the vehicle information on the Character LCD.
+```text
+--------------------
+Speed : 60 km/h
+Gear  : G2
+RPM   : 2800
+IND   : <-
+--------------------
+```
 
-🖥️ Output
+### ▶️ Output 3 – Right Indicator
 
-The dashboard displays the received values in real time.
+```text
+--------------------
+Speed : 70 km/h
+Gear  : G3
+RPM   : 3200
+IND   : ->
+--------------------
+```
 
-Example 1 – Normal Operation
-┌────────────────────┐
-│ Speed : 75 km/h    │
-│ Gear  : G3         │
-│ RPM   : 3500       │
-│ Ind   : OFF        │
-└────────────────────┘
-Example 2 – Left Indicator
-┌────────────────────┐
-│ Speed : 60 km/h    │
-│ Gear  : G2         │
-│ RPM   : 2800       │
-│ Ind   : <-         │
-└────────────────────┘
-Example 3 – Hazard Indicator
-┌────────────────────┐
-│ Speed : 40 km/h    │
-│ Gear  : G2         │
-│ RPM   : 2200       │
-│ Ind   : <->        │
-└────────────────────┘
+### 🚨 Output 4 – Hazard Indicator
 
-The displayed values change according to the data received from ECU1 and ECU2 through the CAN bus.
+```text
+--------------------
+Speed : 40 km/h
+Gear  : G2
+RPM   : 2200
+IND   : <->
+--------------------
+```
 
-🎯 Key Learning
+---
 
-Through this project, I gained practical experience in:
+## 💡 Key Learning
 
-🔹 CAN protocol and ECU-to-ECU communication
-🔹 PIC18F4580 microcontroller
-🔹 Embedded C programming
-🔹 ADC interfacing
-🔹 Character LCD interfacing
-🔹 GPIO configuration
-🔹 Timer0 and interrupt handling
-🔹 CAN message transmission and reception
-🔹 Standard CAN identifiers
-🔹 Multi-ECU system architecture
-🔹 Real-time data processing
-✅ Result
+- 📡 Understanding CAN communication between multiple ECUs
+- 🆔 Understanding CAN message IDs
+- 📈 ADC-based data acquisition
+- 📺 Character LCD interfacing
+- ⏱️ Timer0 configuration
+- ⚡ Interrupt handling
+- 🔌 GPIO configuration
+- 🔄 CAN data transmission and reception
+- ⚙️ Processing received CAN messages
+- 📊 Converting ADC values into meaningful vehicle parameters
+- 🧩 Multi-ECU embedded system design
+- 💻 Register-level Embedded C programming
+- 📺 Real-time dashboard data display
 
-Successfully developed a 3-ECU CAN-based automotive dashboard system using PIC18F4580 and Embedded C.
+---
 
-The system successfully transfers Speed, Gear, RPM, and Indicator information between multiple ECUs through CAN and displays the received information on a Character LCD.
+## 🧪 Result
 
-👤 Author
+The **CAN-Based Automotive Dashboard** successfully demonstrates communication between three **PIC18F4580 ECUs**.
 
-Sk Shabeena
+The system receives and displays:
 
-📧 Email: skshabeena33@gmail.com
-💼 LinkedIn: Shaik Shabeena
-🐙 GitHub: shabeena1703
+```text
+✔ 🚗 Speed
+✔ ⚙️ Gear
+✔ 🔄 RPM
+✔ 💡 Indicator Status
+```
+
+The project demonstrates how multiple ECUs can communicate through a **CAN network** and how the received vehicle information can be processed and displayed on a centralized dashboard.
+
+---
+
+## 👤 Author
+
+### **Sk Shabeena**
+
+📧 **Email:** skshabeena33@gmail.com
+
+🔗 **LinkedIn:** https://www.linkedin.com/in/shaik-shabeena-36a7b933/
+
+🔗 **GitHub:** https://github.com/shabeena1703
 
